@@ -1,18 +1,25 @@
 from pymongo import MongoClient
 import json
+import glob
 
-connection_str = input("Please input the connection string: ")
-client = MongoClient(connection_str) #creates a new MongoClient instance with specified connection string
 
-db_name = input("Please input the database name: ")
-db = client[db_name] #Accesses database using name as hashkey
+HOST = 'localhost'
+PORT = '27107'
 
-collection_name = input("Please input the collection name: ")
-collection = db[collection_name] #Accesses collection using name as hashkey
+url = f"mongodb://{HOST}:{PORT}/"
+client = MongoClient()
 
-filepath_str = input("Please input filepath to JSON file: ")
-with open(filepath_str, 'r') as f: #opens JSON file using specified path
-    file_data = json.load(f) #converts data to JSON objects
-    collection.insert_many(file_data) #inserts above JSON objects into the collection
-        
-client.close() #closes client connection
+client.drop_database('eddo')
+db_name = 'eddo'
+db = client[db_name]
+
+files = glob.glob('./data/*.json')
+
+for file in files:
+    collection_name = file[7:-5]
+    collection = db[collection_name]
+    json_text = open(file, 'r').read()
+    json_obj = json.loads(json_text)
+    collection.insert_many(json_obj)
+
+client.close()
